@@ -5,6 +5,7 @@ using System.Threading;
 using vtortola.WebSockets;
 using vtortola.WebSockets.Http;
 using vtortola.WebSockets.Rfc6455;
+using System.Windows.Automation;
 
 namespace WarframeMarketHelper
 {
@@ -44,6 +45,7 @@ namespace WarframeMarketHelper
             };
             opts.Standards.RegisterRfc6455();
             _wsClient = new WebSocketClient(opts);
+
         }
 
         ~Helper()
@@ -58,37 +60,38 @@ namespace WarframeMarketHelper
             catch(Exception) {}
         }
 
-        public void Run()
+        public void Start()
         {
             _cancellationSource = new CancellationTokenSource();
             _cancellation = _cancellationSource.Token;
 
-            while (true)
-            {
-                bool runLoop;
-                lock (_tokenLock)
-                {
-                    runLoop = (_token?.Length ?? 0) > 0;
-                }
-                if (runLoop)
-                {
-                    if (_cancellation.IsCancellationRequested)
-                        break;
+            SetOnlineState(false);
 
-                    var processes = Process.GetProcessesByName("Warframe.x64");
-                    if (processes.Length > 0 && !_currentlyOnline)
-                        SetOnlineState(true);
-                    else if (processes.Length == 0 && _currentlyOnline)
-                        SetOnlineState(false);
-                }
-
-                Thread.Sleep(10000);
-            }
+            Automation.AddAutomationFocusChangedEventHandler(OnFocusChanged);
         }
 
         public void Stop()
         {
             _cancellationSource?.Cancel();
+
+            Automation.RemoveAutomationFocusChangedEventHandler(OnFocusChanged);
+        }
+
+        private void OnFocusChanged(object sender, AutomationFocusChangedEventArgs e)
+        {
+            AutomationElement focusedElement = sender as AutomationElement;
+            if (focusedElement != null)
+            {
+                int processId = focusedElement.Current.ProcessId;
+                using (Process process = Process.GetProcessById(processId))
+                {
+                    Debug.WriteLine(process.ProcessName);
+                    if(process.ProcessName == "Warframe.x64" && !_currentlyOnline)
+                        SetOnlineState(true);
+                    else if (process.ProcessName != "Warframe.x64" && _currentlyOnline)
+                        SetOnlineState(false);
+                }
+            }
         }
 
         private async void SetOnlineState(bool online)

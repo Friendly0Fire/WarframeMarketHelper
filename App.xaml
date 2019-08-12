@@ -10,7 +10,7 @@
         <local:ShowWindowCommand x:Key="ShowWindowCommand" />
         <tb:TaskbarIcon x:Key="BackgroundIcon"
             IconSource="/favicon.ico"
-            ToolTipText="hello world"
+            ToolTipText="Warframe Market Helper"
             DoubleClickCommand="{StaticResource ShowWindowCommand}"
             >
             <tb:TaskbarIcon.ContextMenu>

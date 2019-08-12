@@ -21,11 +21,7 @@ namespace WarframeMarketHelper
         private TaskbarIcon _taskIcon;
         private MainWindow _window;
 
-        public void Start()
-        {
-            var task = new Task(() => _helper.Run());
-            task.Start();
-        }
+        public void Start() => _helper.Start();
 
         public void Stop() => _helper.Stop();
 
@@ -71,6 +67,8 @@ namespace WarframeMarketHelper
             _helper = new Helper();
             _helper.Token = Settings.Default.token;
             _taskIcon = (TaskbarIcon) FindResource("BackgroundIcon");
+
+            _helper.Start();
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)
